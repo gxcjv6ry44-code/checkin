@@ -21,56 +21,57 @@
   </div>
 
   <script>
-    // TODO: paste your Make webhook URL here
+  // TODO: paste your Make webhook URL here
     const MAKE_CHECKIN_WEBHOOK_URL = "https://hook.us2.make.com/5vsa578e34v4xr5u3yh7dlqgghvqifyb";
 
-    function qp(name) {
-      return new URLSearchParams(window.location.search).get(name) || "";
-    }
-
-    const payload = {
-      serviceDate: qp("date"),
-      shift: qp("shift"),
-      stake: qp("stake"),
-      scanKey: qp("key")
-    };
-
-    const statusEl = document.getElementById("status");
-    const detailEl = document.getElementById("detail");
-
-    function show(msg, ok=true) {
-      statusEl.className = ok ? "ok" : "bad";
-      statusEl.textContent = msg;
-      detailEl.innerHTML =
-        `<div><strong>Date:</strong> <code>${payload.serviceDate || "-"}</code></div>
-         <div><strong>Shift:</strong> <code>${payload.shift || "-"}</code></div>
-         <div><strong>Stake:</strong> <code>${payload.stake || "-"}</code></div>`;
-    }
-
-    // Basic validation
-    if (!payload.serviceDate || !payload.shift || !payload.stake || !payload.scanKey) {
-      show("Missing check-in info. Please re-scan your QR code.", false);
-    } else if (!MAKE_CHECKIN_WEBHOOK_URL || MAKE_CHECKIN_WEBHOOK_URL.includes("PASTE_")) {
-      show("Check-in page is not configured (webhook missing).", false);
-    } else {
-     fetch(MAKE_CHECKIN_WEBHOOK_URL, {
-  method: "POST",
-  headers: { "Content-Type":"application/json" },
-  body: JSON.stringify(payload)
-})
-.then(async r => {
-  const data = await r.json().catch(() => ({}));
-  if (!r.ok) throw new Error("HTTP " + r.status);
-  if (data.status === "duplicate") {
-    show("Already checked in ✓", true);
-  } else {
-    show("Checked in ✓", true);
+  function qp(name) {
+    return new URLSearchParams(window.location.search).get(name) || "";
   }
-})
-.catch(err => {
-  console.error(err);
-  show("Check-in failed. Please tell the orchard lead.", false);
-});
-  </script>
+
+  const payload = {
+    serviceDate: qp("date"),
+    shift: qp("shift"),
+    stake: qp("stake"),
+    scanKey: qp("key")
+  };
+
+  const statusEl = document.getElementById("status");
+  const detailEl = document.getElementById("detail");
+
+  function show(msg, ok=true) {
+    statusEl.className = ok ? "ok" : "bad";
+    statusEl.textContent = msg;
+    detailEl.innerHTML =
+      `<div><strong>Date:</strong> <code>${payload.serviceDate || "-"}</code></div>
+       <div><strong>Shift:</strong> <code>${payload.shift || "-"}</code></div>
+       <div><strong>Stake:</strong> <code>${payload.stake || "-"}</code></div>`;
+  }
+
+  // Basic validation
+  if (!payload.serviceDate || !payload.shift || !payload.stake || !payload.scanKey) {
+    show("Missing check-in info. Please re-scan your QR code.", false);
+  } else if (!MAKE_CHECKIN_WEBHOOK_URL || MAKE_CHECKIN_WEBHOOK_URL.includes("PASTE_")) {
+    show("Check-in page is not configured (webhook missing).", false);
+  } else {
+    fetch(MAKE_CHECKIN_WEBHOOK_URL, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload)
+    })
+    .then(async r => {
+      const data = await r.json().catch(() => ({}));
+      if (!r.ok) throw new Error("HTTP " + r.status);
+      if (data.status === "duplicate") {
+        show("Already checked in ✓", true);
+      } else {
+        show("Checked in ✓", true);
+      }
+    })
+    .catch(err => {
+      console.error(err);
+      show("Check-in failed. Please tell the orchard lead.", false);
+    });
+  }
+</script>
 </body>
 </html>
