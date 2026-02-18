@@ -53,20 +53,24 @@
     } else if (!MAKE_CHECKIN_WEBHOOK_URL || MAKE_CHECKIN_WEBHOOK_URL.includes("PASTE_")) {
       show("Check-in page is not configured (webhook missing).", false);
     } else {
-      fetch(MAKE_CHECKIN_WEBHOOK_URL, {
-        method: "POST",
-        headers: { "Content-Type":"application/json" },
-        body: JSON.stringify(payload)
-      })
-      .then(async r => {
-        if (!r.ok) throw new Error("HTTP " + r.status);
-        show("Checked in ✓", true);
-      })
-      .catch(err => {
-        console.error(err);
-        show("Check-in failed. Please tell the orchard lead.", false);
-      });
-    }
+     fetch(MAKE_CHECKIN_WEBHOOK_URL, {
+  method: "POST",
+  headers: { "Content-Type":"application/json" },
+  body: JSON.stringify(payload)
+})
+.then(async r => {
+  const data = await r.json().catch(() => ({}));
+  if (!r.ok) throw new Error("HTTP " + r.status);
+  if (data.status === "duplicate") {
+    show("Already checked in ✓", true);
+  } else {
+    show("Checked in ✓", true);
+  }
+})
+.catch(err => {
+  console.error(err);
+  show("Check-in failed. Please tell the orchard lead.", false);
+});
   </script>
 </body>
 </html>
