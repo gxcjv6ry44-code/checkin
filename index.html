@@ -22,7 +22,7 @@
 </head>
 <body>
   <div class="card">
-    <h2>North Ogden Orchard Check-In-Test</h2>
+    <h2>North Ogden Orchard Check-In</h2>
 
     <div id="status" class="muted">Preparing check-in…</div>
     <div id="detail" class="muted" style="margin-top:10px;"></div>
@@ -109,7 +109,6 @@
       detailEl.innerHTML =
         `<div><strong>Check-in ID:</strong> <code>${payload.id || "-"}</code></div>
          ${extraHtml}`;
-    }
     }
 
     /***********************
@@ -216,7 +215,7 @@
     }
 
     // Validate required QR parameters before anything else
-     const missing = !payload.id;
+    const missing = !payload.id;
 
     if (missing) {
       setStatus("Missing check-in info. Please re-scan your QR code.", false);
@@ -231,22 +230,21 @@
         submitCheckin();
       });
 
-      retryGeoBtn.addEventListener("click", () => runGeofence().catch(err => {
-        console.error(err);
-        setStatus(`Location check failed: ${err.message || err}`, false);
-      }));
+    retryGeoBtn.addEventListener("click", () => runGeofence().catch(err => {
+      console.error(err);
+      setStatus(`Location check failed: ${err.message || err}`, false);
+      renderDetail();
+      actionsEl.style.display = "none";
+    }));
 
       // start geofence on load
-      geoOk = true;
-      setStatus("Test mode: geofence bypassed.", true);
-      actionsEl.style.display = "block";
-      return;
       runGeofence().catch(err => {
         console.error(err);
         setStatus(`Location check failed: ${err.message || err}`, false);
         renderDetail();
         actionsEl.style.display = "none";
       });
+      
     }
   </script>
 </body>
