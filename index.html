@@ -107,10 +107,9 @@
 
     function renderDetail(extraHtml = "") {
       detailEl.innerHTML =
-        `<div><strong>Date:</strong> <code>${payload.serviceDate || "-"}</code></div>
-         <div><strong>Shift:</strong> <code>${payload.shift || "-"}</code></div>
-         <div><strong>Stake:</strong> <code>${payload.stake || "-"}</code></div>
+        `<div><strong>Check-in ID:</strong> <code>${payload.id || "-"}</code></div>
          ${extraHtml}`;
+    }
     }
 
     /***********************
@@ -124,12 +123,8 @@
     const watchedEl = document.getElementById("watchedSafetyVideos");
 
     const payload = {
-      serviceDate: qp("date"),
-      shift: qp("shift"),
-      stake: qp("stake"),
-      scanKey: qp("key"),
+      id: qp("id"),
       watchedSafetyVideos: false,
-      // geofence info will be added after location check
       geo: null
     };
 
@@ -221,8 +216,7 @@
     }
 
     // Validate required QR parameters before anything else
-    const missing =
-      !payload.serviceDate || !payload.shift || !payload.stake || !payload.scanKey;
+     const missing = !payload.id;
 
     if (missing) {
       setStatus("Missing check-in info. Please re-scan your QR code.", false);
