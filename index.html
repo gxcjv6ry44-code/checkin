@@ -237,6 +237,10 @@
       }));
 
       // start geofence on load
+      geoOk = true;
+      setStatus("Test mode: geofence bypassed.", true);
+      actionsEl.style.display = "block";
+      return;
       runGeofence().catch(err => {
         console.error(err);
         setStatus(`Location check failed: ${err.message || err}`, false);
