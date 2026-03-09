@@ -14,7 +14,6 @@
     .row{margin-top:14px;display:flex;gap:10px;flex-wrap:wrap;align-items:center}
     button{padding:11px 14px;border-radius:12px;border:0;font-weight:800;cursor:pointer}
     button.primary{background:#2563eb;color:#fff}
-    button.secondary{background:#e5e7eb;color:#111827}
     .box{margin-top:14px;padding:12px;border:1px solid #e5e7eb;border-radius:12px;background:#fbfbfc}
     .checkRow{display:flex;gap:10px;align-items:flex-start}
     .checkRow input{margin-top:3px;width:18px;height:18px}
@@ -41,12 +40,7 @@
         </div>
 
         <div class="row">
-          <button id="confirmBtn" class="primary">Confirm Check-In</button>
-          <button id="retryGeoBtn" class="secondary" type="button">Retry Location</button>
-        </div>
-
-        <div class="muted" style="margin-top:8px;">
-          If location fails, make sure your phone allows location for this site and try again.
+          <button id="confirmBtn" class="primary" type="button">Confirm Check-In</button>
         </div>
       </div>
     </div>
@@ -58,18 +52,6 @@
      ***********************/
     const MAKE_CHECKIN_WEBHOOK_URL = "https://hook.us2.make.com/5vsa578e34v4xr5u3yh7dlqgghvqifyb";
 
-    // Hard geofence (edit these as needed)
-    const GEOFENCE_CENTER_LAT = 41.3275;
-    const GEOFENCE_CENTER_LNG = -112.010278;
-    const GEOFENCE_RADIUS_METERS = 200;
-
-
-    const GEO_OPTS = {
-      enableHighAccuracy: true,
-      timeout: 30000,
-      maximumAge: 60000
-    };
-
     /***********************
      * Helpers
      ***********************/
@@ -80,29 +62,6 @@
     function setStatus(msg, ok = true) {
       statusEl.className = ok ? "ok" : "bad";
       statusEl.textContent = msg;
-    }
-
-    function distanceMeters(lat1, lon1, lat2, lon2) {
-      const toRad = (x) => (x * Math.PI) / 180;
-      const R = 6371000;
-      const dLat = toRad(lat2 - lat1);
-      const dLon = toRad(lon2 - lon1);
-      const a =
-        Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-        Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) *
-        Math.sin(dLon / 2) * Math.sin(dLon / 2);
-      const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-      return R * c;
-    }
-
-    function getPosition() {
-      return new Promise((resolve, reject) => {
-        if (!navigator.geolocation) {
-          reject(Object.assign(new Error("Geolocation not supported."), { code: "NO_GEO" }));
-          return;
-        }
-        navigator.geolocation.getCurrentPosition(resolve, reject, GEO_OPTS);
-      });
     }
 
     function renderDetail(extraHtml = "") {
@@ -118,62 +77,18 @@
     const detailEl = document.getElementById("detail");
     const actionsEl = document.getElementById("actions");
     const confirmBtn = document.getElementById("confirmBtn");
-    const retryGeoBtn = document.getElementById("retryGeoBtn");
     const watchedEl = document.getElementById("watchedSafetyVideos");
 
     const payload = {
       id: qp("id"),
-      watchedSafetyVideos: false,
-      geo: null
+      watchedSafetyVideos: false
     };
 
-    let geoOk = false;
     let isSubmitting = false;
 
     /***********************
      * Main flow
      ***********************/
-    async function runGeofence() {
-      setStatus("Checking location…", true);
-      renderDetail();
-
-      const pos = await getPosition();
-      const lat = pos.coords.latitude;
-      const lng = pos.coords.longitude;
-      const accuracy = pos.coords.accuracy;
-
-      const dist = distanceMeters(lat, lng, GEOFENCE_CENTER_LAT, GEOFENCE_CENTER_LNG);
-
-      payload.geo = {
-        lat,
-        lng,
-        accuracyMeters: accuracy,
-        distanceMeters: dist,
-        centerLat: GEOFENCE_CENTER_LAT,
-        centerLng: GEOFENCE_CENTER_LNG,
-        radiusMeters: GEOFENCE_RADIUS_METERS
-      };
-
-      const geoHtml =
-        `<div style="margin-top:10px;">
-           <strong>Location:</strong>
-           <code>${Math.round(dist)}m</code> from orchard (allowed <code>${GEOFENCE_RADIUS_METERS}m</code>, accuracy ±<code>${Math.round(accuracy)}m</code>)
-         </div>`;
-
-      renderDetail(geoHtml);
-
-      if (dist > GEOFENCE_RADIUS_METERS) {
-        geoOk = false;
-        setStatus("Not at orchard location — check-in blocked.", false);
-        actionsEl.style.display = "none";
-        return;
-      }
-
-      geoOk = true;
-      setStatus("Location verified. Please confirm check-in.", true);
-      actionsEl.style.display = "block";
-    }
-
     async function submitCheckin() {
       if (isSubmitting) return;
       isSubmitting = true;
@@ -203,7 +118,7 @@
           setStatus("Checked in ✓ (no status returned)", true);
         }
 
-        actionsEl.style.display = "none"; // stop double-submit
+        actionsEl.style.display = "none";
       } catch (err) {
         console.error(err);
         setStatus("Check-in failed. Please tell the orchard lead.", false);
@@ -224,27 +139,13 @@
       setStatus("Check-in page is not configured (webhook missing).", false);
       renderDetail();
     } else {
-      // wire buttons
+      renderDetail();
+      setStatus("Ready. Please confirm check-in.", true);
+      actionsEl.style.display = "block";
+
       confirmBtn.addEventListener("click", () => {
-        if (!geoOk) return;
         submitCheckin();
       });
-
-    retryGeoBtn.addEventListener("click", () => runGeofence().catch(err => {
-      console.error(err);
-      setStatus(`Location check failed: ${err.message || err}`, false);
-      renderDetail();
-      actionsEl.style.display = "none";
-    }));
-
-      // start geofence on load
-      runGeofence().catch(err => {
-        console.error(err);
-        setStatus(`Location check failed: ${err.message || err}`, false);
-        renderDetail();
-        actionsEl.style.display = "none";
-      });
-      
     }
   </script>
 </body>
