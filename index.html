@@ -110,13 +110,15 @@
 
         if (!resp.ok) throw new Error(`HTTP ${resp.status}: ${text}`);
 
-        if (data.status === "duplicate") {
-          setStatus("Already checked in ✓ (duplicate scan)", true);
-        } else if (data.status === "ok") {
-          setStatus("Checked in ✓", true);
-        } else {
-          setStatus("Checked in ✓ (no status returned)", true);
-        }
+     if (data.status === "duplicate") {
+        setStatus("Already checked in ✓ (duplicate scan)", true);
+      } else if (data.status === "ok") {
+        setStatus("Checked in ✓", true);
+      } else if (data.status === "too_early" || data.status === "Too early to check in") {
+        setStatus("Too early to check in.", false);
+      } else {
+        setStatus(data.message || `Unexpected response: ${data.status || "no status returned"}`, false);
+      }
 
         actionsEl.style.display = "none";
       } catch (err) {
