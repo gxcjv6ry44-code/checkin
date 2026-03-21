@@ -114,7 +114,7 @@
         setStatus("Already checked in ✓ (duplicate scan)", true);
       } else if (data.status === "ok") {
         setStatus("Checked in ✓", true);
-      } else if (data.status === "too_early" || data.status === "Too early to check in. Show link when at check in point.") {
+      } else if (data.status === "too_early" || data.status === "Too early to check in. Show link at check in point.") {
         setStatus("Too early to check in.", false);
       } else {
         setStatus(data.message || `Unexpected response: ${data.status || "no status returned"}`, false);
